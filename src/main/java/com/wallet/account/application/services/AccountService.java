@@ -1,8 +1,9 @@
 package com.wallet.account.application.services;
 
 import org.springframework.stereotype.Service;
-
+import lombok.extern.slf4j.Slf4j;
 import com.wallet.account.domain.model.Account;
+import com.wallet.account.domain.model.exception.AccountNotFoundException;
 import com.wallet.account.domain.ports.in.CreateAccountUseCase;
 import com.wallet.account.domain.ports.in.DepositUseCase;
 import com.wallet.account.domain.ports.in.WithdrawUseCase;
@@ -10,6 +11,7 @@ import com.wallet.account.domain.ports.out.AccountRepositoryPort;
 import com.wallet.account.domain.ports.in.GetBalanceUseCase;
 
 
+@Slf4j
 @Service
 public class AccountService implements CreateAccountUseCase,
         DepositUseCase,
@@ -35,8 +37,8 @@ public class AccountService implements CreateAccountUseCase,
             accountRepository.save(modifiedAccount);
         }
         else {
-            System.out.println("Account not found for ID: " + accountId);
-            throw new IllegalArgumentException("Account not found");
+            log.error("Account not found for ID: {}", accountId);
+            throw new AccountNotFoundException("Account not found");
         }
     }
 
@@ -48,8 +50,8 @@ public class AccountService implements CreateAccountUseCase,
             accountRepository.save(modifiedAccount);
         }
         else {
-            System.out.println("Account not found for ID: " + accountId);
-            throw new IllegalArgumentException("Account not found");
+            log.error("Account not found for ID: {}", accountId);
+            throw new AccountNotFoundException("Account not found");
         }
     }
 
