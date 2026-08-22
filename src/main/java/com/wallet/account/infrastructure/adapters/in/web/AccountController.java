@@ -4,6 +4,8 @@ import com.wallet.account.domain.model.Account;
 import com.wallet.account.domain.model.AccountRequest;
 import com.wallet.account.domain.ports.in.GetBalanceUseCase;
 import com.wallet.account.domain.ports.in.WithdrawUseCase;
+import com.wallet.account.infrastructure.adapters.in.web.dto.AccountDto;
+import com.wallet.account.infrastructure.adapters.in.web.dto.AccountMapper;
 import com.wallet.account.domain.ports.in.CreateAccountUseCase;
 import com.wallet.account.domain.ports.in.DepositUseCase;
 
@@ -28,8 +30,8 @@ public class AccountController{
     }
 
     @PostMapping("/new")
-    public ResponseEntity<String> newAccount(@RequestBody Account request) {
-        createAccountUseCase.createAccount(request);
+    public ResponseEntity<String> newAccount(@RequestBody AccountDto request) {
+        createAccountUseCase.createAccount(AccountMapper.toDomain(request));
         return ResponseEntity.ok("Cuenta creada exitosamente");
     }
 

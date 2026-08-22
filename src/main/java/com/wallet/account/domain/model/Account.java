@@ -1,11 +1,13 @@
 package com.wallet.account.domain.model;
 import com.wallet.account.domain.model.exception.InsufficientBalanceException;
 
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 
 @Slf4j
+@Builder
 public record Account(String email, double balance, Instant createdAt, Instant lastUpdatedAt) {
 
     public Account(String email, double balance) {
