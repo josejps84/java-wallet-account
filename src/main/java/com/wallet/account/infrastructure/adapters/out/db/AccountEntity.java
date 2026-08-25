@@ -1,52 +1,44 @@
 package com.wallet.account.infrastructure.adapters.out.db;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Column;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Table(name = "accounts")
+@Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "account")
 public class AccountEntity {
 
     @Id
-    @Column(nullable = false, unique = true)
-    private String email;
+    @Column(name = "account_nmbr", nullable = false, unique = true, length = 50)
+    private String accountNmbr;
 
-    @Column(nullable = false)
-    private BigDecimal balance; // Se recomienda BigDecimal para montos de dinero
+    @Column(name = "current_balance", precision = 19, scale = 4)
+    private BigDecimal currentBalance;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(name = "currency")
+    private String currency;
 
-    @UpdateTimestamp
-    @Column(name = "last_updated_at", nullable = false)
-    private Instant lastUpdatedAt;
+    @Column(name = "status")
+    private Integer status;
 
-    // Constructores, Getters y Setters
-    public AccountEntity() {
-        // Default constructor required by JPA
-    }
+    @Column(name = "user_id")
+    private Long userId;
 
-    public AccountEntity(String email, BigDecimal balance, Instant createdAt, Instant lastUpdatedAt) {
-        this.email = email;
-        this.balance = balance;
-        this.createdAt = createdAt;
-        this.lastUpdatedAt = lastUpdatedAt;
-    }
+    @Column(name = "date_creation")
+    private Instant dateCreation;
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    public double getBalance() { return balance.doubleValue(); }
-    public void setBalance(BigDecimal balance) { this.balance = balance; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-    public Instant getLastUpdatedAt() { return lastUpdatedAt; }
-    public void setLastUpdatedAt(Instant lastUpdatedAt) { this.lastUpdatedAt = lastUpdatedAt; }
+    @Column(name = "last_update")
+    private Instant lastUpdate;
 }

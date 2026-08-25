@@ -58,7 +58,7 @@ public class AccountService implements CreateAccountUseCase,
     @Override
     public double getBalance(String accountId) {
         Account account = accountRepository.findById(accountId);
-        return (account != null) ? account.balance() : 0.0;
+        return (account != null) ? account.currentBalance().doubleValue() : 0.0;
     }
     
 }

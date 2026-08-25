@@ -1,6 +1,8 @@
 package com.wallet.account.infrastructure.adapters.in.web.dto;
 
 import java.time.Instant;
+import java.math.BigDecimal;
+import com.wallet.account.domain.model.AccountStatus;
 
 import com.wallet.account.domain.model.Account;
 
@@ -8,17 +10,26 @@ public class AccountMapper {
 
     public static AccountDto toDto(Account account) {
         return AccountDto.builder()
-                .email(account.email())
-                .balance(account.balance())
-                .build();
+                .accountNmbr(account.accountNmbr())
+                .currentBalance(account.currentBalance())
+                .currency(account.currency())
+                //.status(account.status())
+                .userId(account.userId())
+                .dateCreation(account.dateCreation())
+                .lastUpdate(account.lastUpdate())
+                    .build();
     }
 
-    public static Account toDomain(AccountDto accountDto) {
+    public static Account toDomain(AccountCreationDto accountCreationRequest) {
+        Instant now = Instant.now();
         return Account.builder()
-                .email(accountDto.getEmail())
-                .balance(accountDto.getBalance() == null ? 0 : accountDto.getBalance())
-                .createdAt(Instant.now())
-                .lastUpdatedAt(Instant.now())
+                .accountNmbr(accountCreationRequest.getAccountNmbr())
+                .currentBalance(BigDecimal.ZERO)
+                .currency("USD")
+                .status(AccountStatus.ACTIVE)
+                .userId(accountCreationRequest.getUserId())
+                .dateCreation(now)
+                .lastUpdate(now)
                 .build();
     }
 }

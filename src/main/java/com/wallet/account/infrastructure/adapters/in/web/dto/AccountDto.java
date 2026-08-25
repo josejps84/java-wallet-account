@@ -1,14 +1,17 @@
 package com.wallet.account.infrastructure.adapters.in.web.dto;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
+import lombok.Builder;
+import java.math.BigDecimal;
+import java.time.Instant;
+//import com.wallet.account.domain.model.AccountStatus;
+
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class AccountDto {
-    private String email;
-    private Double balance;
+   String accountNmbr;
+   BigDecimal currentBalance;
+   String currency;
+   //AccountStatus status;
+   Long userId;
+   Instant dateCreation;
+   Instant lastUpdate;
 }
