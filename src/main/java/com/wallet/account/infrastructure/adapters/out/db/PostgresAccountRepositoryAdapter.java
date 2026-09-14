@@ -1,9 +1,14 @@
 package com.wallet.account.infrastructure.adapters.out.db;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import com.wallet.account.domain.model.Account;
 import com.wallet.account.domain.ports.out.AccountRepositoryPort;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class PostgresAccountRepositoryAdapter implements AccountRepositoryPort {
@@ -29,5 +34,16 @@ public class PostgresAccountRepositoryAdapter implements AccountRepositoryPort {
         return repository.findById(accountId)
                 .map(AccountEntityMapper::toDomain)
                 .orElse(null);
+    }
+
+    @Override
+    public List<Account> findAllAccounts(int page) {
+        // Implement the logic to retrieve all accounts from the PostgreSQL database
+        int pageSize = 10; // Define the number of accounts per page
+        Pageable pageable = PageRequest.of(page, pageSize);
+        return repository.findAll(pageable)
+                .stream()
+                .map(AccountEntityMapper::toDomain)
+                .collect(Collectors.toList());
     }
 }
