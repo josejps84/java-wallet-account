@@ -1,8 +1,8 @@
 package com.wallet.account.domain.model;
 
 public enum AccountStatus {
-    ACTIVE(1),
-    INACTIVE(0);
+    INACTIVE(0),
+    ACTIVE(1);
 
     private final int value;
 

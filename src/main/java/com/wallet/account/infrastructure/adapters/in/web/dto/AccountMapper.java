@@ -13,7 +13,7 @@ public class AccountMapper {
                 .accountNmbr(account.accountNmbr())
                 .currentBalance(account.currentBalance())
                 .currency(account.currency())
-                //.status(account.status())
+                .status(account.status())
                 .userId(account.userId())
                 .dateCreation(account.dateCreation())
                 .lastUpdate(account.lastUpdate())
@@ -30,6 +30,15 @@ public class AccountMapper {
                 .userId(accountCreationRequest.getUserId())
                 .dateCreation(now)
                 .lastUpdate(now)
+                .build();
+    }
+
+    public static Account toDomain(AccountEditDto accountEditRequest) {
+        Instant now = Instant.now();
+        return Account.builder()
+                .accountNmbr(accountEditRequest.getAccountNmbr())
+                .currency(accountEditRequest.getCurrency())
+                .status(accountEditRequest.getStatus())
                 .build();
     }
 }

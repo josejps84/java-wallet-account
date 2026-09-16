@@ -49,4 +49,16 @@ public record Account(
         BigDecimal nextBalance = currentBalance.subtract(requestedAmount);
         return new Account(accountNmbr, nextBalance, currency, status, userId, dateCreation, Instant.now());
     }
+
+    public Account  updateData(Account accountData) {
+        return new Account(
+                accountNmbr,
+                currentBalance,
+                accountData.currency != null ? accountData.currency : currency,
+                accountData.status != null ? accountData.status : status,
+                userId,
+                dateCreation,
+                Instant.now()
+        );
+    }
 }

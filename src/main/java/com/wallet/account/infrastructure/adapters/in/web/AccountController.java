@@ -2,13 +2,12 @@ package com.wallet.account.infrastructure.adapters.in.web;
 
 import com.wallet.account.domain.model.Account;
 import com.wallet.account.domain.ports.in.*;
-import com.wallet.account.infrastructure.adapters.in.web.dto.AccountCreationDto;
-import com.wallet.account.infrastructure.adapters.in.web.dto.AccountRequest;
-import com.wallet.account.infrastructure.adapters.in.web.dto.AccountMapper;
+import com.wallet.account.infrastructure.adapters.in.web.dto.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,15 +20,18 @@ public class AccountController {
     private final WithdrawUseCase withdrawUseCase;
     private final GetBalanceUseCase getBalanceUseCase;
     private final GetAccountsUseCase getAccountsUseCase;
+    private final EditAccountUseCase editAccountUseCase;
 
     public AccountController(CreateAccountUseCase createAccountUseCase, DepositUseCase depositUseCase,
                             WithdrawUseCase withdrawUseCase, GetBalanceUseCase getBalanceUseCase,
-                            GetAccountsUseCase getAccountsUseCase) {
+                            GetAccountsUseCase getAccountsUseCase,
+                            EditAccountUseCase editAccountUseCase) {
         this.createAccountUseCase = createAccountUseCase;
         this.depositUseCase = depositUseCase;
         this.withdrawUseCase = withdrawUseCase;
         this.getBalanceUseCase = getBalanceUseCase;
         this.getAccountsUseCase = getAccountsUseCase;
+        this.editAccountUseCase = editAccountUseCase;
     }
 
     @GetMapping
@@ -39,9 +41,9 @@ public class AccountController {
 
 
         String token = authorizationHeader.substring(7);
-        getAccountsUseCase.getAllAccounts(page == null ? 0 : page, token);
+        List<AccountDto> accountDtoList = getAccountsUseCase.getAllAccounts(page == null ? 0 : page, token);
         // Implement the logic to retrieve all accounts
-        return ResponseEntity.ok(Map.of("status", "Lista de cuentas"));
+        return ResponseEntity.ok(Map.of("accounts", accountDtoList));
     }
 
     @PostMapping("/new")
@@ -67,5 +69,12 @@ public class AccountController {
     public ResponseEntity<Map<String, Double>> getBalance(@PathVariable String accountId) {
         double balance = getBalanceUseCase.getBalance(accountId);
         return ResponseEntity.ok(Map.of("balance", balance));
+    }
+
+    @PutMapping("/edit")
+    public ResponseEntity<String> editAccount(@RequestBody AccountEditDto request) {
+        Account account = AccountMapper.toDomain(request);
+        editAccountUseCase.editAccount(account);
+        return ResponseEntity.ok("Cuenta editada exitosamente");
     }
 }

@@ -22,7 +22,8 @@ public class AccountService implements CreateAccountUseCase,
         DepositUseCase,
         WithdrawUseCase,
         GetBalanceUseCase,
-        GetAccountsUseCase {
+        GetAccountsUseCase,
+        EditAccountUseCase {
 
     private final AccountRepositoryPort accountRepository;
     private final AuthenticationPort authenticator;
@@ -35,6 +36,20 @@ public class AccountService implements CreateAccountUseCase,
     @Override
     public Account createAccount(Account account) {
         return accountRepository.save(account);
+    }
+
+    @Override
+    public Account editAccount(Account accountData) {
+        Account account = accountRepository.findById(accountData.accountNmbr());
+        if (account != null) {
+            Account modifiedAccount = account.updateData(accountData);
+            accountRepository.save(modifiedAccount);
+            return modifiedAccount;
+        }
+        else {
+            log.error("Account not found for ID: {}", accountData.accountNmbr());
+            throw new AccountNotFoundException("Account not found");
+        }
     }
 
     @Override
@@ -76,9 +91,10 @@ public class AccountService implements CreateAccountUseCase,
         UserType userType = GetUserTypeFromToken(token);
         if (userType == UserType.ADMIN) {
             // Retrieve all accounts for admin users
-            return accountRepository.findAllAccounts(page).stream()
+            List<AccountDto> accountList = accountRepository.findAllAccounts(page).stream()
                     .map(AccountMapper::toDto)
                     .toList();
+            return accountList;
         } else {
             // For non-admin users, return an empty list or handle accordingly
             log.warn("Non-admin user attempted to access all accounts");
