@@ -8,4 +8,5 @@ public interface AccountRepositoryPort {
     Account save(Account account);
     Account findById(String accountId);
     List<Account> findAllAccounts(int page);
+    List<Account> findAllAccounts(int page, long userId);
 }

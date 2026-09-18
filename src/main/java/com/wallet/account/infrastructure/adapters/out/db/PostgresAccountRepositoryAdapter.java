@@ -46,4 +46,15 @@ public class PostgresAccountRepositoryAdapter implements AccountRepositoryPort {
                 .map(AccountEntityMapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Account> findAllAccounts(int page, long userId) {
+        // Implement the logic to retrieve all accounts from the PostgreSQL database
+        int pageSize = 10; // Define the number of accounts per page
+        Pageable pageable = PageRequest.of(page, pageSize);
+        return repository.findByUserId(userId)
+                .stream()
+                .map(AccountEntityMapper::toDomain)
+                .collect(Collectors.toList());
+    }
 }

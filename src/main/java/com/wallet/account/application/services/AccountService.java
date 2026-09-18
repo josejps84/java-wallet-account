@@ -26,11 +26,9 @@ public class AccountService implements CreateAccountUseCase,
         EditAccountUseCase {
 
     private final AccountRepositoryPort accountRepository;
-    private final AuthenticationPort authenticator;
 
-    public AccountService(AccountRepositoryPort accountRepository, AuthenticationPort authenticator) {
+    public AccountService(AccountRepositoryPort accountRepository) {
         this.accountRepository = accountRepository;
-        this.authenticator = authenticator;
     }
 
     @Override
@@ -85,10 +83,7 @@ public class AccountService implements CreateAccountUseCase,
     }
 
     @Override
-    public List<AccountDto> getAllAccounts(int page, String token) {
-        // Implement the logic to retrieve all accounts based on the page and token
-        // For now, returning an empty list as a placeholder
-        UserType userType = GetUserTypeFromToken(token);
+    public List<AccountDto> getAllAccounts(int page, UserType userType, long userId) {
         if (userType == UserType.ADMIN) {
             // Retrieve all accounts for admin users
             List<AccountDto> accountList = accountRepository.findAllAccounts(page).stream()
@@ -96,21 +91,10 @@ public class AccountService implements CreateAccountUseCase,
                     .toList();
             return accountList;
         } else {
-            // For non-admin users, return an empty list or handle accordingly
-            log.warn("Non-admin user attempted to access all accounts");
-        }
-        return new ArrayList<>();
-    }
-
-    private UserType GetUserTypeFromToken(String token) {
-        Result<Claims, AuthenticationResult> result = authenticator.validateToken(token);
-        if (result instanceof Result.Success<Claims, AuthenticationResult> success) {
-            Claims claims = success.value();
-            String userTypeStr = claims.get("userType", String.class);
-            return UserType.valueOf(userTypeStr);
-        } else {
-            log.error("Invalid token: {}", result);
-            throw new RuntimeException("Invalid token");
+            List<AccountDto> accountList = accountRepository.findAllAccounts(page, userId).stream()
+                    .map(AccountMapper::toDto)
+                    .toList();
+            return accountList;
         }
     }
 

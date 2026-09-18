@@ -1,12 +1,15 @@
 package com.wallet.account.infrastructure.adapters.in.web;
 
 import com.wallet.account.domain.model.Account;
+import com.wallet.account.domain.model.UserType;
 import com.wallet.account.domain.ports.in.*;
 import com.wallet.account.infrastructure.adapters.in.web.dto.*;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -36,13 +39,14 @@ public class AccountController {
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllAccounts(@RequestParam(name="page", required = false) Integer page,
-                                                              @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        log.info("Received request to get all accounts for page: {} auth: {}", page, authorizationHeader);
-
-
-        String token = authorizationHeader.substring(7);
-        List<AccountDto> accountDtoList = getAccountsUseCase.getAllAccounts(page == null ? 0 : page, token);
-        // Implement the logic to retrieve all accounts
+                                                              HttpServletRequest httpRequest) {
+        UserType userType = httpRequest.getAttribute("userType") != null ?
+                UserType.valueOf(httpRequest.getAttribute("userType").toString()) :
+                UserType.CUSTOMER;
+        long userId = httpRequest.getAttribute("userId") != null ?
+                Long.parseLong(httpRequest.getAttribute("userId").toString()) :
+                0L;
+        List<AccountDto> accountDtoList = getAccountsUseCase.getAllAccounts(page == null ? 0 : page, userType, userId);
         return ResponseEntity.ok(Map.of("accounts", accountDtoList));
     }
 
