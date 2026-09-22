@@ -1,12 +1,11 @@
 package com.wallet.account.domain.ports.out;
 
 import com.wallet.account.domain.model.Account;
-
-import java.util.List;
+import com.wallet.account.domain.model.PagedResult;
 
 public interface AccountRepositoryPort {
     Account save(Account account);
     Account findById(String accountId);
-    List<Account> findAllAccounts(int page);
-    List<Account> findAllAccounts(int page, long userId);
+    PagedResult<Account> findAllAccounts(int page, int pageSize);
+    PagedResult<Account> findAllAccounts(int page, int pageSize, long userId);
 }

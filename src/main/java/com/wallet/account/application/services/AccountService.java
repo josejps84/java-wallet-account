@@ -1,5 +1,6 @@
 package com.wallet.account.application.services;
 
+import com.wallet.account.domain.model.PagedResult;
 import com.wallet.account.domain.model.UserType;
 import com.wallet.account.domain.ports.in.*;
 import com.wallet.account.infrastructure.adapters.in.web.dto.AccountDto;
@@ -83,19 +84,18 @@ public class AccountService implements CreateAccountUseCase,
     }
 
     @Override
-    public List<AccountDto> getAllAccounts(int page, UserType userType, long userId) {
+    public PagedResult<AccountDto> getAllAccounts(int page, int pageSize, UserType userType, long userId) {
+        PagedResult<Account> accountsPage;
         if (userType == UserType.ADMIN) {
             // Retrieve all accounts for admin users
-            List<AccountDto> accountList = accountRepository.findAllAccounts(page).stream()
-                    .map(AccountMapper::toDto)
-                    .toList();
-            return accountList;
+            accountsPage = accountRepository.findAllAccounts(page, pageSize);
         } else {
-            List<AccountDto> accountList = accountRepository.findAllAccounts(page, userId).stream()
-                    .map(AccountMapper::toDto)
-                    .toList();
-            return accountList;
+            accountsPage = accountRepository.findAllAccounts(page, pageSize, userId);
         }
+        List<AccountDto> accountDtoList = accountsPage.content().stream()
+                .map(AccountMapper::toDto)
+                .toList();
+        return new PagedResult<>(accountDtoList, accountsPage.totalElements());
     }
 
 }

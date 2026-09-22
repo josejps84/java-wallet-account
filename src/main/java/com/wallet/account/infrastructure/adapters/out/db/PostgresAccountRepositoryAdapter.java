@@ -1,10 +1,12 @@
 package com.wallet.account.infrastructure.adapters.out.db;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import com.wallet.account.domain.model.Account;
+import com.wallet.account.domain.model.PagedResult;
 import com.wallet.account.domain.ports.out.AccountRepositoryPort;
 
 import java.util.List;
@@ -37,24 +39,24 @@ public class PostgresAccountRepositoryAdapter implements AccountRepositoryPort {
     }
 
     @Override
-    public List<Account> findAllAccounts(int page) {
+    public PagedResult<Account> findAllAccounts(int page, int pageSize) {
         // Implement the logic to retrieve all accounts from the PostgreSQL database
-        int pageSize = 10; // Define the number of accounts per page
         Pageable pageable = PageRequest.of(page, pageSize);
-        return repository.findAll(pageable)
-                .stream()
+        Page<AccountEntity> result = repository.findAll(pageable);
+        List<Account> content = result.getContent().stream()
                 .map(AccountEntityMapper::toDomain)
                 .collect(Collectors.toList());
+        return new PagedResult<>(content, result.getTotalElements());
     }
 
     @Override
-    public List<Account> findAllAccounts(int page, long userId) {
+    public PagedResult<Account> findAllAccounts(int page, int pageSize, long userId) {
         // Implement the logic to retrieve all accounts from the PostgreSQL database
-        int pageSize = 10; // Define the number of accounts per page
         Pageable pageable = PageRequest.of(page, pageSize);
-        return repository.findByUserId(userId)
-                .stream()
+        List<Account> content = repository.findByUserId(userId, pageable).stream()
                 .map(AccountEntityMapper::toDomain)
                 .collect(Collectors.toList());
+        long totalElements = repository.countByUserId(userId);
+        return new PagedResult<>(content, totalElements);
     }
 }

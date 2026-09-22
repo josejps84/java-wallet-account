@@ -1,6 +1,7 @@
 package com.wallet.account.infrastructure.adapters.in.web;
 
 import com.wallet.account.domain.model.Account;
+import com.wallet.account.domain.model.PagedResult;
 import com.wallet.account.domain.model.UserType;
 import com.wallet.account.domain.ports.in.*;
 import com.wallet.account.infrastructure.adapters.in.web.dto.*;
@@ -10,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -39,15 +39,17 @@ public class AccountController {
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllAccounts(@RequestParam(name="page", required = false) Integer page,
+                                                              @RequestParam(name="pageSize", required = false) Integer pageSize,
                                                               HttpServletRequest httpRequest) {
-        UserType userType = httpRequest.getAttribute("userType") != null ?
-                UserType.valueOf(httpRequest.getAttribute("userType").toString()) :
-                UserType.CUSTOMER;
-        long userId = httpRequest.getAttribute("userId") != null ?
-                Long.parseLong(httpRequest.getAttribute("userId").toString()) :
-                0L;
-        List<AccountDto> accountDtoList = getAccountsUseCase.getAllAccounts(page == null ? 0 : page, userType, userId);
-        return ResponseEntity.ok(Map.of("accounts", accountDtoList));
+        UserType userType = HttpUtils.getAttributeFromRequest(httpRequest, "userType", UserType.CUSTOMER);
+        long userId       = HttpUtils.getAttributeFromRequest(httpRequest, "userId", 0L);
+
+        PagedResult<AccountDto> accountsPage = getAccountsUseCase.getAllAccounts(page == null ? 0 : page,
+                pageSize == null ? 20 : pageSize, userType, userId);
+
+        return ResponseEntity.ok(Map.of(
+                "accounts", accountsPage.content(),
+                "totalItems", accountsPage.totalElements()));
     }
 
     @PostMapping("/new")
