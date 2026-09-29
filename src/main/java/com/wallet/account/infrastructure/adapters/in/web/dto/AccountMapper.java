@@ -34,7 +34,6 @@ public class AccountMapper {
     }
 
     public static Account toDomain(AccountEditDto accountEditRequest) {
-        Instant now = Instant.now();
         return Account.builder()
                 .accountNmbr(accountEditRequest.getAccountNmbr())
                 .currency(accountEditRequest.getCurrency())
