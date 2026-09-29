@@ -5,16 +5,12 @@ import com.wallet.account.domain.model.UserType;
 import com.wallet.account.domain.ports.in.*;
 import com.wallet.account.infrastructure.adapters.in.web.dto.AccountDto;
 import com.wallet.account.infrastructure.adapters.in.web.dto.AccountMapper;
-import com.wallet.account.infrastructure.adapters.in.security.AuthenticationResult;
-import com.wallet.account.domain.core.Result;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
 import com.wallet.account.domain.model.Account;
 import com.wallet.account.domain.model.exception.AccountNotFoundException;
 import com.wallet.account.domain.ports.out.AccountRepositoryPort;
-import io.jsonwebtoken.Claims;
 
 
 @Slf4j
@@ -27,14 +23,18 @@ public class AccountService implements CreateAccountUseCase,
         EditAccountUseCase {
 
     private final AccountRepositoryPort accountRepository;
+    private final MessageProducerService messageProducerService;
 
-    public AccountService(AccountRepositoryPort accountRepository) {
+    public AccountService(AccountRepositoryPort accountRepository, MessageProducerService messageProducerService) {
         this.accountRepository = accountRepository;
+        this.messageProducerService = messageProducerService;
     }
 
     @Override
     public Account createAccount(Account account) {
-        return accountRepository.save(account);
+        Account createdAccount = accountRepository.save(account);
+        messageProducerService.enviarMensaje("Account created: " + createdAccount.accountNmbr());
+        return createdAccount;
     }
 
     @Override
