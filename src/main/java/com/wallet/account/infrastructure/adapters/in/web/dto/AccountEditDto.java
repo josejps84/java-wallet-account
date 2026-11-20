@@ -1,17 +1,12 @@
 package com.wallet.account.infrastructure.adapters.in.web.dto;
 
 import com.wallet.account.domain.model.AccountStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
-@Builder
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class AccountEditDto {
-    String accountNmbr;
-    String currency;
-    AccountStatus status;
+public record AccountEditDto(
+        @NotBlank String accountNmbr,
+        @Pattern(regexp = "[A-Z]{3}", message = "debe ser un código de moneda de 3 letras") String currency,
+        AccountStatus status
+) {
 }

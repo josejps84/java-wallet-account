@@ -1,19 +1,20 @@
 package com.wallet.account.infrastructure.adapters.out.db;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Component;
-
 import com.wallet.account.domain.model.Account;
 import com.wallet.account.domain.model.PagedResult;
 import com.wallet.account.domain.ports.out.AccountRepositoryPort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Component
 public class PostgresAccountRepositoryAdapter implements AccountRepositoryPort {
+
+    private static final Sort DEFAULT_SORT = Sort.by("dateCreation").descending().and(Sort.by("accountNmbr"));
 
     private final SpringDataPostgresAccountRepository repository;
 
@@ -23,40 +24,35 @@ public class PostgresAccountRepositoryAdapter implements AccountRepositoryPort {
 
     @Override
     public Account save(Account account) {
-        // Implement the logic to save the account to the PostgreSQL database
-        AccountEntity entity = AccountEntityMapper.toEntity(account);
-        AccountEntity saved = repository.save(entity);
-        return AccountEntityMapper.toDomain(saved);
+        return AccountEntityMapper.toDomain(repository.save(AccountEntityMapper.toEntity(account)));
     }
 
     @Override
-    public Account findById(String accountId) {
-        // Implement the logic to find the account by ID from the PostgreSQL database
-        System.out.println("Finding account by ID: " + accountId);
-        return repository.findById(accountId)
-                .map(AccountEntityMapper::toDomain)
-                .orElse(null);
+    public Optional<Account> findById(String accountNmbr) {
+        return repository.findById(accountNmbr).map(AccountEntityMapper::toDomain);
+    }
+
+    @Override
+    public Optional<Account> findByIdForUpdate(String accountNmbr) {
+        return repository.findByIdForUpdate(accountNmbr).map(AccountEntityMapper::toDomain);
     }
 
     @Override
     public PagedResult<Account> findAllAccounts(int page, int pageSize) {
-        // Implement the logic to retrieve all accounts from the PostgreSQL database
-        Pageable pageable = PageRequest.of(page, pageSize);
-        Page<AccountEntity> result = repository.findAll(pageable);
-        List<Account> content = result.getContent().stream()
-                .map(AccountEntityMapper::toDomain)
-                .collect(Collectors.toList());
-        return new PagedResult<>(content, result.getTotalElements());
+        return toPagedResult(repository.findAll(pageRequest(page, pageSize)));
     }
 
     @Override
-    public PagedResult<Account> findAllAccounts(int page, int pageSize, long userId) {
-        // Implement the logic to retrieve all accounts from the PostgreSQL database
-        Pageable pageable = PageRequest.of(page, pageSize);
-        List<Account> content = repository.findByUserId(userId, pageable).stream()
-                .map(AccountEntityMapper::toDomain)
-                .collect(Collectors.toList());
-        long totalElements = repository.countByUserId(userId);
-        return new PagedResult<>(content, totalElements);
+    public PagedResult<Account> findAllAccountsByUserId(int page, int pageSize, long userId) {
+        return toPagedResult(repository.findByUserId(userId, pageRequest(page, pageSize)));
+    }
+
+    private static Pageable pageRequest(int page, int pageSize) {
+        return PageRequest.of(page, pageSize, DEFAULT_SORT);
+    }
+
+    private static PagedResult<Account> toPagedResult(Page<AccountEntity> result) {
+        return new PagedResult<>(result.getContent().stream().map(AccountEntityMapper::toDomain).toList(),
+                result.getTotalElements());
     }
 }

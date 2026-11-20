@@ -2,12 +2,10 @@ package com.wallet.account.domain.model;
 
 import com.wallet.account.domain.model.exception.InsufficientBalanceException;
 import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
-@Slf4j
 @Builder
 public record Account(
         String accountNmbr,
@@ -19,46 +17,50 @@ public record Account(
         Instant lastUpdate
 ) {
 
-    public Account(String accountNmbr, Long userId) {
-        this(accountNmbr, BigDecimal.ZERO, "USD", AccountStatus.ACTIVE, userId, Instant.now(), Instant.now());
+    public static final String DEFAULT_CURRENCY = "USD";
+
+    public static Account open(String accountNmbr, long userId, String currency) {
+        Instant now = Instant.now();
+        return new Account(accountNmbr, BigDecimal.ZERO, currency != null ? currency : DEFAULT_CURRENCY,
+                AccountStatus.ACTIVE, userId, now, now);
     }
 
-    public Account deposit(double amount) {
-        if (amount <= 0) {
-            log.error("Attempted to deposit a non-positive amount: {} in account {}", amount, accountNmbr);
-            throw new IllegalArgumentException("Deposit amount must be positive");
-        }
-
-        BigDecimal nextBalance = currentBalance.add(BigDecimal.valueOf(amount));
-        return new Account(accountNmbr, nextBalance, currency, status, userId, dateCreation, Instant.now());
+    public boolean isOwnedBy(long candidateUserId) {
+        return userId != null && userId == candidateUserId;
     }
 
-    public Account withdraw(double amount) {
-        if (amount <= 0) {
-            log.error("Attempted to withdraw a non-positive amount: {} from account {}", amount, accountNmbr);
-            throw new IllegalArgumentException("Withdraw amount must be positive");
-        }
-
-        BigDecimal requestedAmount = BigDecimal.valueOf(amount);
-        if (requestedAmount.compareTo(currentBalance) > 0) {
-            log.error("Attempted to withdraw {} from account {} with insufficient balance. Current balance: {}",
-                    amount, accountNmbr, currentBalance);
-            throw new InsufficientBalanceException("Insufficient balance");
-        }
-
-        BigDecimal nextBalance = currentBalance.subtract(requestedAmount);
-        return new Account(accountNmbr, nextBalance, currency, status, userId, dateCreation, Instant.now());
+    public Account deposit(BigDecimal amount) {
+        requirePositive(amount, "El monto a depositar debe ser positivo");
+        return withBalance(currentBalance.add(amount));
     }
 
-    public Account  updateData(Account accountData) {
+    public Account withdraw(BigDecimal amount) {
+        requirePositive(amount, "El monto a retirar debe ser positivo");
+        if (amount.compareTo(currentBalance) > 0) {
+            throw new InsufficientBalanceException("Saldo insuficiente");
+        }
+        return withBalance(currentBalance.subtract(amount));
+    }
+
+    public Account updateData(String newCurrency, AccountStatus newStatus) {
         return new Account(
                 accountNmbr,
                 currentBalance,
-                accountData.currency != null ? accountData.currency : currency,
-                accountData.status != null ? accountData.status : status,
+                newCurrency != null ? newCurrency : currency,
+                newStatus != null ? newStatus : status,
                 userId,
                 dateCreation,
                 Instant.now()
         );
+    }
+
+    private Account withBalance(BigDecimal nextBalance) {
+        return new Account(accountNmbr, nextBalance, currency, status, userId, dateCreation, Instant.now());
+    }
+
+    private static void requirePositive(BigDecimal amount, String message) {
+        if (amount == null || amount.signum() <= 0) {
+            throw new IllegalArgumentException(message);
+        }
     }
 }
