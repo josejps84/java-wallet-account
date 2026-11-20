@@ -1,10 +1,11 @@
 # AGENTS.md
 
-- This repo is a single-module Spring Boot app; there is no separate workspace or package manager setup. The app entrypoint is `src/main/java/com/wallet/account/AccountApplication.java`, with web/API code under `src/main/java/com/wallet/account/infrastructure/adapters/in/web`, domain logic under `src/main/java/com/wallet/account/domain`, and persistence under `src/main/java/com/wallet/account/infrastructure/adapters/out/db`.
-- Use the Maven wrapper from the repo root: `./mvnw ...`. The build is defined in `pom.xml`, and the project explicitly targets Java 25 (`<java.version>25</java.version>`). The Dockerfile also builds/runs on Temurin 25.
-- Standard verification command: `./mvnw test`. There is no separate lint/typecheck task configured in this repo; if you need a single test, use `./mvnw -Dtest=AccountApplicationTests test`.
-- Local runtime is not self-contained: `src/main/resources/application.properties` points to PostgreSQL at `localhost:5432/accounts` with user `admin` and password `SamplePassword123`. Flyway is enabled; do not assume Hibernate creates tables.
-- App port is `8082` (`server.port=8082`), and endpoints are mounted under `/api/accounts` via `AccountController`. Security config in `AppConfig.java` explicitly disables default auth and allows `/api/accounts/**`.
-- The repo uses a hexagonal/domain-driven layout: `AccountService` orchestrates use cases, repository abstractions live in `domain/ports/*`, and the Postgres adapter implements persistence via `SpringDataPostgresAccountRepository`.
-- Important gotcha: Lombok is used throughout (`@Builder`, `@Slf4j`, record-based domain model). If Maven reports `cannot find symbol: log` or `builder()`, check the Java/Lombok annotation-processing setup before changing business logic.
-- No README is present at the root; trust the executable build config and Spring config files over prose when they differ.
+- Single-module Spring Boot 4 app (Java 25). Entry point `src/main/java/com/wallet/account/AccountApplication.java`. Hexagonal layout: `domain` (model, ports), `application/services/AccountService` (use cases, `@Transactional`), `infrastructure` (web, db, messaging, security adapters). Domain and use-case ports must not import infrastructure classes.
+- Build with the wrapper: `./mvnw test`. **Use JDK 25** (`JAVA_HOME=/usr/lib/jvm/java-25-openjdk`): Lombok crashes on newer JDKs (e.g. 27). Lombok runs through `annotationProcessorPaths` in `pom.xml`.
+- `AccountApplicationTests` starts PostgreSQL and RabbitMQ with Testcontainers (skipped when Docker is unavailable). Unit tests: `AccountTest`, `AccountServiceTest`.
+- Config: secrets are environment variables (`JWT_SECRET`, `DB_PASSWORD`, `RABBITMQ_PASSWORD`, optional `DB_URL`, `RABBITMQ_HOST`...). For local runs put them in `.env` (git-ignored, see `.env.example`); `spring.config.import` loads it. `JWT_SECRET` must match the users service and the gateway.
+- Port `8082`, endpoints under `/api/accounts`. Every endpoint needs a valid JWT (`JwtAuthenticationFilter` → `Caller` principal, injected with `@AuthenticationPrincipal`). Authorization rules live in `AccountService`: customers only see/move their own accounts (foreign accounts answer 404), only admins edit accounts or open accounts for other users. Account numbers are generated server side.
+- Money is `BigDecimal` end to end. Deposits/withdrawals lock the row (`findByIdForUpdate`, `PESSIMISTIC_WRITE`).
+- Schema is owned by Flyway (`db/migration`); never edit an applied migration, add a new `V<n>__*.sql`. `AccountStatus` is stored by its explicit `value` via `AccountStatusConverter`.
+- Audit events (`AccountEvent`) are sent as JSON to RabbitMQ (`app.audit.*`) after the transaction commits; consumed by `py-wallet-audit`.
+- Errors are RFC 9457 `ProblemDetail` JSON (`GlobalExceptionHandler`); user-facing messages are in Spanish, logs in English.
